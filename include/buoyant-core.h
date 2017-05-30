@@ -19,7 +19,9 @@ typedef uint8_t buoyant_arg_t;
 typedef uint16_t buoyant_wide_arg_t;
 
 typedef void (*buoyant_runtime_fn_t)(buoyant_t* b,
-                                     buoyant_internal_opcode_t opcode);
+                                     buoyant_arg_t id,
+                                     void* first,
+                                     void* second);
 
 /* `W` postfix means immediate wide argument */
 enum buoyant_internal_opcode_id_e {
@@ -32,7 +34,7 @@ enum buoyant_internal_opcode_id_e {
   /* vmleave reg, 0 */
   kBuoyantInternalOpcodeVMLeave = 2,
 
-  /* runtime reg, reg, id */
+  /* runtime id, reg1, reg2 */
   kBuoyantInternalOpcodeRuntime = 3,
 
   /* `arg reg, index`
@@ -43,7 +45,9 @@ enum buoyant_internal_opcode_id_e {
    *   - 3 for W
    */
   kBuoyantInternalOpcodeArg = 4,
-  kBuoyantInternalOpcodeAdd32 = 5,
+
+  /* `vmloadreg reg, vm-reg-index` */
+  kBuoyantInternalOpcodeVMLoadReg = 5,
 
   kBuoyantInternalOpcodeMax = 255,
   kBuoyantInternalOpcodeCount

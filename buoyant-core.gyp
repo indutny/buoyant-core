@@ -27,6 +27,7 @@
 
     "sources": [
       "src/buoyant-core.c",
+      "src/emulator.c",
     ],
   }, {
     "target_name": "buoyant-core-test",
