@@ -19,14 +19,14 @@ buoyant_t* buoyant_create(buoyant_runtime_fn_t runtime) {
   if (res == NULL)
     return NULL;
 
-  res->stack.data = calloc(DEFAULT_STACK_SIZE, sizeof(*res->stack.data));
-  if (res->stack.data == NULL) {
+  res->vm_stack.data = calloc(DEFAULT_STACK_SIZE, sizeof(*res->vm_stack.data));
+  if (res->vm_stack.data == NULL) {
     free(res);
     return NULL;
   }
 
-  res->stack.start = res->stack.data;
-  res->stack.end = &res->stack.data[DEFAULT_STACK_SIZE];
+  res->vm_stack.start = res->vm_stack.data;
+  res->vm_stack.end = &res->vm_stack.data[DEFAULT_STACK_SIZE];
 
   res->pc = NULL;
   res->mode = kBuoyantDispatchNormal;
@@ -40,19 +40,16 @@ buoyant_t* buoyant_create(buoyant_runtime_fn_t runtime) {
 
 
 void buoyant__add_default_opcodes(buoyant_t* b) {
-  static buoyant_opcode_t code_enter[1];
-  static buoyant_opcode_t code_leave[1];
-  static buoyant_opcode_t code_runtime[2];
+  static buoyant_opcode_t code_enter[2];
+  static buoyant_opcode_t code_leave[2];
 
-  code_enter[0] = BUOYANT_IOP(Enter, 0, 0, 0);
-  code_leave[0] = BUOYANT_IOP(Leave, 0, 0, 0);
-
+  code_enter[0] = BUOYANT_IOP(VMEnter, 0, 0, 0);
+  code_enter[1] = BUOYANT_WIDE_IOP(Return, 0, 0);
   b->opcode.handler[kBuoyantDefaultOpcodeEnter].code = code_enter;
-  b->opcode.handler[kBuoyantDefaultOpcodeLeave].code = code_leave;
 
-  code_runtime[0] = BUOYANT_IOP(Runtime, 0, 0, 0);
-  code_runtime[1] = BUOYANT_WIDE_IOP(Leave, 0, 0);
-  b->opcode.handler[kBuoyantDefaultOpcodeRuntime].code = code_runtime;
+  code_leave[0] = BUOYANT_IOP(VMLeave, 0, 0, 0);
+  code_leave[1] = BUOYANT_WIDE_IOP(Return, 0, 0);
+  b->opcode.handler[kBuoyantDefaultOpcodeLeave].code = code_leave;
 
   b->opcode.count = kBuoyantOpcodeStart;
 }
@@ -92,50 +89,38 @@ int buoyant_register_opcode(buoyant_t* b,
 }
 
 
-static void buoyant__stack_push(buoyant_t* b, void* data) {
-  assert(b->stack.data < b->stack.end);
-  (*b->stack.data++) = data;
-}
-
-
-static void* buoyant__stack_pop(buoyant_t* b) {
-  assert(b->stack.data > b->stack.start);
-  return (*--b->stack.data);
-}
-
-
-static void buoyant__stack_reserve(buoyant_t* b, void** value) {
-  assert(b->stack.start <= value && value < b->stack.end);
-}
-
-
-static void buoyant__stack_restore(buoyant_t* b, void** value) {
-  assert(b->stack.start <= value && value < b->stack.end);
-}
-
-
 static void buoyant__call(buoyant_t* b, buoyant_opcode_t* code,
                           buoyant_dispatch_mode_t mode) {
-  buoyant__stack_push(b, b->pc);
-  buoyant__stack_push(b, (void*) (intptr_t) b->mode);
-  b->pc = code;
+  assert(b->mode == kBuoyantDispatchNormal);
   b->mode = mode;
+
+  if (b->mode == kBuoyantDispatchInternal) {
+    b->emulator.caller = b->pc;
+  } else {
+    buoyant__stack_push(&b->vm_stack, b->pc);
+  }
+  b->pc = code;
 }
 
 
 static void buoyant__return(buoyant_t* b) {
-  b->mode = (intptr_t) buoyant__stack_pop(b);
-  b->pc = buoyant__stack_pop(b);
+  if (b->mode == kBuoyantDispatchInternal) {
+    b->pc = b->emulator.caller;
+    b->emulator.caller = NULL;
+    b->mode = kBuoyantDispatchNormal;
+  } else {
+    b->pc = buoyant__stack_pop(&b->vm_stack);
+  }
 }
 
 
 void buoyant_run(buoyant_t* b, buoyant_opcode_t* code) {
   void** stack;
 
-  stack = b->stack.data;
+  stack = b->vm_stack.data;
   buoyant__call(b, code, kBuoyantDispatchNormal);
 
-  while (b->stack.data != stack) {
+  while (b->vm_stack.data != stack) {
     buoyant_opcode_t opcode;
     buoyant_opcode_id_t opcode_id;
     const buoyant_opcode_handler_t* handler;
@@ -152,10 +137,10 @@ void buoyant_run(buoyant_t* b, buoyant_opcode_t* code) {
     }
 
     switch (opcode_id) {
-      case kBuoyantInternalOpcodeEnter:
+      case kBuoyantInternalOpcodeVMEnter:
         /* TODO(indutny): implement me */
         break;
-      case kBuoyantInternalOpcodeLeave:
+      case kBuoyantInternalOpcodeVMLeave:
         /* TODO(indutny): implement me */
         buoyant__return(b);
         break;

@@ -3,7 +3,11 @@
 
 #include "include/buoyant-core.h"
 
+#include "src/stack.h"
+
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
+#define EMULATOR_REGS 256
 
 enum buoyant_dispatch_mode_e {
   kBuoyantDispatchNormal,
@@ -19,11 +23,12 @@ struct buoyant_s {
     unsigned int count;
   } opcode;
 
+  buoyant_stack_t vm_stack;
+
   struct {
-    void** data;
-    void** start;
-    void** end;
-  } stack;
+    buoyant_opcode_t* caller;
+    void** regs[EMULATOR_REGS];
+  } emulator;
 
   buoyant_opcode_t* pc;
   buoyant_dispatch_mode_t mode;
