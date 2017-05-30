@@ -55,10 +55,13 @@ enum buoyant_internal_opcode_id_e {
 typedef enum buoyant_internal_opcode_id_e buoyant_internal_opcode_id_t;
 
 enum buoyant_default_opcode_id_e {
+  /* enableic 0, 0 */
+  kBuoyantDefaultOpcodeEnableIC = 0,
+
   /* enter 0, slots */
-  kBuoyantDefaultOpcodeEnter = 0,
+  kBuoyantDefaultOpcodeEnter = 1,
   /* leave 0, slots */
-  kBuoyantDefaultOpcodeLeave = 1,
+  kBuoyantDefaultOpcodeLeave = 2,
 
   /* Just an offset, not instruction */
   kBuoyantOpcodeStart,
