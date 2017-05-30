@@ -3,8 +3,14 @@
 
 #include <stdint.h>
 
+#define BUOYANT_IOP(CODE, A, B, C) \
+    buoyant_build_opcode(kBuoyantInternalOpcode##CODE, (A), (B), (C))
+#define BUOYANT_WIDE_IOP(CODE, A, W) \
+    buoyant_build_wide_opcode(kBuoyantInternalOpcode##CODE, (A), (W))
+
 /* Forward declaration */
-typedef struct buoyant_core_s buoyant_core_t;
+typedef struct buoyant_s buoyant_t;
+typedef struct buoyant_opcode_handler_s buoyant_opcode_handler_t;
 
 typedef uint32_t buoyant_opcode_t;
 typedef uint32_t buoyant_internal_opcode_t;
@@ -12,24 +18,48 @@ typedef uint8_t buoyant_opcode_id_t;
 typedef uint8_t buoyant_arg_t;
 typedef uint16_t buoyant_wide_arg_t;
 
-typedef void (*buoyant_runtime_fn_t)(buoyant_core_t* b,
+typedef void (*buoyant_runtime_fn_t)(buoyant_t* b,
                                      buoyant_internal_opcode_t opcode);
 
+/* `W` postfix means immediate wide argument */
 enum buoyant_internal_opcode_id_e {
-  kBuoyantInternalRuntime = 0,
-  kBuoyantInternalAdd32 = 1
+  kBuoyantInternalOpcodeEnter = 0,
+  kBuoyantInternalOpcodeLeave = 1,
+  kBuoyantInternalOpcodeEnterW = 2,
+  kBuoyantInternalOpcodeLeaveW = 3,
+  kBuoyantInternalOpcodeRuntime = 4,
+  kBuoyantInternalOpcodeAdd32 = 5,
+
+  kBuoyantInternalOpcodeMax = 255,
+  kBuoyantInternalOpcodeCount
 };
 typedef enum buoyant_internal_opcode_id_e buoyant_internal_opcode_id_t;
 
-buoyant_core_t* buoyant_create(buoyant_runtime_fn_t runtime);
-void buoyant_destroy(buoyant_core_t* b);
+enum buoyant_default_opcode_id_e {
+  kBuoyantDefaultOpcodeEnter = 0,
+  kBuoyantDefaultOpcodeLeave = 1,
+  kBuoyantDefaultOpcodeRuntime = 2,
 
-buoyant_opcode_id_t buoyant_register_opcode(
-      buoyant_core_t* b, const buoyant_internal_opcode_t* code,
-      unsigned int code_len);
+  kBuoyantOpcodeStart,
 
-int buoyant_run(buoyant_core_t* b, const buoyant_opcode_t* code,
-                unsigned int code_len);
+  kBuoyantOpcodeMax = 255,
+  kBuoyantOpcodeCount
+};
+typedef enum buoyant_default_opcode_id_e buoyant_default_opcode_id_t;
+
+struct buoyant_opcode_handler_s {
+  buoyant_internal_opcode_t* code;
+  unsigned int len;
+};
+
+buoyant_t* buoyant_create(buoyant_runtime_fn_t runtime);
+void buoyant_destroy(buoyant_t* b);
+
+int buoyant_register_opcode(buoyant_t* b,
+                            const buoyant_opcode_handler_t* handler,
+                            buoyant_opcode_id_t* res);
+
+void buoyant_run(buoyant_t* b, buoyant_opcode_t* code);
 
 /* Helpers */
 static buoyant_opcode_t buoyant_build_opcode(buoyant_opcode_id_t op_id,

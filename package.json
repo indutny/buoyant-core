@@ -1,0 +1,20 @@
+{
+  "name": "buoyant-core",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "gypkg build buoyant-core.gyp",
+    "test": "npm run build && ./out/Release/buoyant-core-test"
+  },
+  "keywords": [],
+  "author": "Fedor Indutny <fedor@indutny.com> (http://darksi.de/)",
+  "license": "MIT",
+  "gypfile": true,
+  "dependencies": {
+    "gypkg": "^2.7.7"
+  }
+}
