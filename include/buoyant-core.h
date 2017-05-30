@@ -53,9 +53,9 @@ struct buoyant_opcode_handler_s {
 buoyant_t* buoyant_create(buoyant_runtime_fn_t runtime);
 void buoyant_destroy(buoyant_t* b);
 
-int buoyant_register_opcode(buoyant_t* b,
-                            const buoyant_opcode_handler_t* handler,
-                            buoyant_opcode_id_t* res);
+int buoyant_install_opcode(buoyant_t* b,
+                           const buoyant_opcode_handler_t* handler,
+                           buoyant_opcode_id_t* res);
 
 void buoyant_run(buoyant_t* b, buoyant_opcode_t* code);
 

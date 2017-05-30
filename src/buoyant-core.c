@@ -58,7 +58,7 @@ void buoyant__add_default_opcodes(buoyant_t* b) {
 void buoyant_destroy(buoyant_t* b) {
   unsigned int i;
 
-  for (i = 0; i < ARRAY_SIZE(b->opcode.handler); i++) {
+  for (i = kBuoyantOpcodeStart; i < ARRAY_SIZE(b->opcode.handler); i++) {
     free(b->opcode.handler[i].code);
     b->opcode.handler[i].code = NULL;
     b->opcode.handler[i].len = 0;
@@ -68,9 +68,9 @@ void buoyant_destroy(buoyant_t* b) {
 }
 
 
-int buoyant_register_opcode(buoyant_t* b,
-                            const buoyant_opcode_handler_t* handler,
-                            buoyant_opcode_id_t* res) {
+int buoyant_install_opcode(buoyant_t* b,
+                           const buoyant_opcode_handler_t* handler,
+                           buoyant_opcode_id_t* res) {
   buoyant_opcode_id_t id;
   buoyant_internal_opcode_t* code;
 
@@ -142,6 +142,10 @@ void buoyant_run(buoyant_t* b, buoyant_opcode_t* code) {
         break;
       case kBuoyantInternalOpcodeVMLeave:
         /* TODO(indutny): implement me */
+        buoyant__return(b);
+        buoyant__return(b);
+        break;
+      case kBuoyantInternalOpcodeReturn:
         buoyant__return(b);
         break;
       case kBuoyantInternalOpcodeRuntime:

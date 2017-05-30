@@ -20,11 +20,11 @@ TEST_IMPL(runtime_call) {
   opcode_handler.code = opcode_impl;
   opcode_handler.len = sizeof(opcode_impl);
 
-  CHECK_EQ(buoyant_register_opcode(b, &opcode_handler, &opcode), 0,
+  CHECK_EQ(buoyant_install_opcode(b, &opcode_handler, &opcode), 0,
            "register_opcode() failure");
 
   code[0] = buoyant_build_wide_opcode(kBuoyantDefaultOpcodeEnter, 0, 4);
-  code[1] = buoyant_build_opcode(0, 1, 2, 3);
+  code[1] = buoyant_build_opcode(opcode, 1, 2, 3);
   code[2] = buoyant_build_wide_opcode(kBuoyantDefaultOpcodeLeave, 0, 4);
 
   buoyant_run(b, code);
