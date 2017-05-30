@@ -26,7 +26,10 @@ struct buoyant_s {
   buoyant_stack_t vm_stack;
 
   struct {
-    buoyant_opcode_t* caller;
+    struct {
+      buoyant_opcode_t opcode;
+      buoyant_opcode_t* pc;
+    } caller;
     void** regs[EMULATOR_REGS];
   } emulator;
 

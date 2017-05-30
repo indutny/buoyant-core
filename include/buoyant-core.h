@@ -23,11 +23,27 @@ typedef void (*buoyant_runtime_fn_t)(buoyant_t* b,
 
 /* `W` postfix means immediate wide argument */
 enum buoyant_internal_opcode_id_e {
+  /* return 0, 0 */
   kBuoyantInternalOpcodeReturn = 0,
+
+  /* vmenter reg, 0 */
   kBuoyantInternalOpcodeVMEnter = 1,
+
+  /* vmleave reg, 0 */
   kBuoyantInternalOpcodeVMLeave = 2,
+
+  /* runtime reg, reg, id */
   kBuoyantInternalOpcodeRuntime = 3,
-  kBuoyantInternalOpcodeAdd32 = 4,
+
+  /* `arg reg, index`
+   * Index values:
+   *   - 0 for A
+   *   - 1 for B
+   *   - 2 for C
+   *   - 3 for W
+   */
+  kBuoyantInternalOpcodeArg = 4,
+  kBuoyantInternalOpcodeAdd32 = 5,
 
   kBuoyantInternalOpcodeMax = 255,
   kBuoyantInternalOpcodeCount
@@ -35,9 +51,12 @@ enum buoyant_internal_opcode_id_e {
 typedef enum buoyant_internal_opcode_id_e buoyant_internal_opcode_id_t;
 
 enum buoyant_default_opcode_id_e {
+  /* enter 0, slots */
   kBuoyantDefaultOpcodeEnter = 0,
+  /* leave 0, slots */
   kBuoyantDefaultOpcodeLeave = 1,
 
+  /* Just an offset, not instruction */
   kBuoyantOpcodeStart,
 
   kBuoyantOpcodeMax = 255,

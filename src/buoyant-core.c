@@ -90,12 +90,14 @@ int buoyant_install_opcode(buoyant_t* b,
 
 
 static void buoyant__call(buoyant_t* b, buoyant_opcode_t* code,
-                          buoyant_dispatch_mode_t mode) {
+                          buoyant_dispatch_mode_t mode,
+                          buoyant_opcode_t caller) {
   assert(b->mode == kBuoyantDispatchNormal);
   b->mode = mode;
 
   if (b->mode == kBuoyantDispatchInternal) {
-    b->emulator.caller = b->pc;
+    b->emulator.caller.pc = b->pc;
+    b->emulator.caller.opcode = caller;
   } else {
     buoyant__stack_push(&b->vm_stack, b->pc);
   }
@@ -105,8 +107,8 @@ static void buoyant__call(buoyant_t* b, buoyant_opcode_t* code,
 
 static void buoyant__return(buoyant_t* b) {
   if (b->mode == kBuoyantDispatchInternal) {
-    b->pc = b->emulator.caller;
-    b->emulator.caller = NULL;
+    b->pc = b->emulator.caller.pc;
+    b->emulator.caller.pc = NULL;
     b->mode = kBuoyantDispatchNormal;
   } else {
     b->pc = buoyant__stack_pop(&b->vm_stack);
@@ -118,7 +120,7 @@ void buoyant_run(buoyant_t* b, buoyant_opcode_t* code) {
   void** stack;
 
   stack = b->vm_stack.data;
-  buoyant__call(b, code, kBuoyantDispatchNormal);
+  buoyant__call(b, code, kBuoyantDispatchNormal, 0);
 
   while (b->vm_stack.data != stack) {
     buoyant_opcode_t opcode;
@@ -132,7 +134,7 @@ void buoyant_run(buoyant_t* b, buoyant_opcode_t* code) {
       handler = &b->opcode.handler[opcode_id];
       assert(handler->code != NULL);
 
-      buoyant__call(b, handler->code, kBuoyantDispatchInternal);
+      buoyant__call(b, handler->code, kBuoyantDispatchInternal, opcode);
       continue;
     }
 
